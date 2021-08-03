@@ -329,15 +329,7 @@ class RewardSniping(ScriptBase):
         base_inv_value = base_balance * current_price
         total_inv_value = base_inv_value + quote_balance
 
-        if total_inv_value >= self.init_total_inv_value:
-            self.init_base_price = current_price
-            self.init_base_amount = base_balance
-            self.init_quote_value = quote_balance
-            self.init_total_inv_value = total_inv_value
-            self.pmm_parameters.inventory_target_base_pct = Decimal(0.5)
-            return
-        
-        if init_current_diff <= Decimal(-0.5):
+        if init_current_diff < Decimal(0):
             target_base_amount = (self.init_base_price / current_price) * self.init_base_amount + (self.init_quote_value - quote_balance) / current_price
             nominal_base_value = self.init_base_price * target_base_amount
             nominal_total_value = nominal_base_value + quote_balance
@@ -350,9 +342,16 @@ class RewardSniping(ScriptBase):
                 target_base_pct = Decimal(0.05)
 
             self.pmm_parameters.inventory_target_base_pct = target_base_pct
-            return
+        else:
+            self.init_base_price = current_price
+            self.init_total_inv_value = total_inv_value
 
-        self.pmm_parameters.inventory_target_base_pct = Decimal(0.5)
+            if total_inv_value > self.init_total_inv_value:
+                self.init_base_amount = base_balance
+                self.init_quote_value = quote_balance
+                self.pmm_parameters.inventory_target_base_pct = Decimal(0.5)
+            else:
+                self.pmm_parameters.inventory_target_base_pct = base_inv_value / total_inv_value
 
     # Utility Methods
     def stdev_price(self, interval: int, length: int) -> Optional[Decimal]:
