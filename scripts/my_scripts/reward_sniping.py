@@ -182,6 +182,8 @@ class RewardSniping(ScriptBase):
                 self.update_inv_ratio_delay = self.update_inv_ratio_delay - 1
 
         # TODO: Write data collection script
+        # TODO: Persist parameters into a file for next time startup
+        #       lets try using https://docs.python.org/3/library/configparser.html
 
     def on_status(self) -> str:
         return self.status_msg()
@@ -238,8 +240,12 @@ class RewardSniping(ScriptBase):
 
         new_ask_spread = new_low_ask_spread
         new_bid_spread = new_low_bid_spread
-        
-        is_high_spread = random.choice([0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1])
+
+        chance = 0.4
+        modifier = min(float(self.probability_upper_pct * 100), 2)
+        chance = chance * modifier
+        result = random.choices([0,1],[1-chance,chance],k=1)
+        is_high_spread = result[0]
         
         if is_high_spread == 1:
             new_ask_spread = new_high_ask_spread
